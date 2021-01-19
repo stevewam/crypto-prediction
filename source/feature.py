@@ -1,6 +1,14 @@
 import pandas as pd
 import numpy as np
 
+def rename_columns(df, suffix):
+    if 'index' in df.columns:
+        df.drop(columns='index', inplace=True)
+    else:
+        pass
+    col_names = [col + '_' + suffix for col in df.columns]
+    df.columns = col_names
+
 def create_features(df, w):
     # Calculate mean
     mean_df = df.groupby('sym').shift(1).rolling(w).mean().reset_index()

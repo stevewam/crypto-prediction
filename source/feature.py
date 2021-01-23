@@ -62,6 +62,10 @@ def create_features(df, w):
 
     features_df = features_df[['time', 'sym'] + feature_cols + ['target_price']]
     
+    # Make time as index
+    features_df['time'] = pd.to_datetime(features_df['time'])
+    features_df = features_df.set_index('time', drop=True)
+    
     # Remove points where there are insufficient data points to calculate features
     # For example, any time step that does not have w data points before it will have NA features
     features_df.dropna(inplace=True)

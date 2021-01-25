@@ -65,7 +65,8 @@ if __name__ == '__main__':
     model = MLPRegressor(hidden_layer_sizes=hidden_layers,
                             max_iter=args.max_iter,
                             activation = 'relu',
-                            solver='lbfgs')
+                            solver='lbfgs',
+                            early_stopping=True)
 #     model = DecisionTreeClassifier(max_depth=args.max_depth)
     
     

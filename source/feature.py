@@ -9,7 +9,7 @@ def rename_columns(df, suffix):
     col_names = [col + '_' + suffix for col in df.columns]
     df.columns = col_names
 
-def create_features(df, w):
+def create_features(df, w, target='price'):
     # Calculate mean
     mean_df = df.groupby('sym').shift(1).rolling(w).mean().reset_index()
     rename_columns(mean_df, '1_mean') # Numbers are assigned to the suffix for column ordering
@@ -38,10 +38,10 @@ def create_features(df, w):
     rename_columns(delta_df, '5_delta')
     
     # Create base table to match created features with its respective time and coin
-    base_df = df[['time', 'sym', 'price']]
+    base_df = df[['time', 'sym', target]]
     
     # Set current price as the target price to predict based on the features
-    base_df = base_df.rename(columns={'price': 'target_price'})
+    base_df = base_df.rename(columns={target: 'target'})
     
     # Combine all features into a single table
     features_df = pd.concat([base_df, mean_df, median_df, stdev_df, last_df, delta_df], axis=1)
@@ -57,10 +57,10 @@ def create_features(df, w):
     feature_cols.remove('time_4_last')
     feature_cols.remove('time')
     feature_cols.remove('sym')
-    feature_cols.remove('target_price')
+    feature_cols.remove('target')
     feature_cols.sort()
 
-    features_df = features_df[['time', 'sym'] + feature_cols + ['target_price']]
+    features_df = features_df[['time', 'sym'] + feature_cols + ['target']]
     
     # Make time as index
     features_df['time'] = pd.to_datetime(features_df['time'])

@@ -32,7 +32,7 @@ def _xgb_train(params, dtrain, evals, num_boost_round, model_dir, is_master, fev
 def mape(predt, dtrain):
     y = dtrain.get_label()
     
-    mape = abs(y/predt - 1) * 100
+    mape = abs(1 - predt/y)
     return 'mape', float(np.sum(mape)/len(y))
 
 

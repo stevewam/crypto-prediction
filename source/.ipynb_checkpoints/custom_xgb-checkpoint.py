@@ -48,6 +48,7 @@ if __name__ == '__main__':
     parser.add_argument('--objective', type=str)
     parser.add_argument('--num_round', type=int)
     parser.add_argument('--early_stopping_rounds', type=int)
+    parser.add_argument('--disable', type=str)
 
     # Sagemaker specific arguments. Defaults are set in the environment variables.
     parser.add_argument('--output_data_dir', type=str, default=os.environ.get('SM_OUTPUT_DATA_DIR'))
@@ -75,7 +76,7 @@ if __name__ == '__main__':
         'subsample': args.subsample,
         'objective': args.objective,
         'early_stopping_rounds': args.early_stopping_rounds,
-        'disable_default_eval_metric': '1'
+        'disable_default_eval_metric': args.disable
         }
 
     xgb_train_args = dict(

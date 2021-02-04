@@ -16,9 +16,10 @@ There are no additional data to be downloaded or any packages to install.
 
 To go through the entire development process, you can follow the sequence below:
 1. [Data Loading](./1.%20Data%20Loading.ipynb.)
-2. [Feature Engineering](./1.%20Feature%20Engineering.ipynb.)
-3. [Modelling Routines](./1.%20Modelling%20Routines.ipynb.)
-4. [Model Evaluations](./1.%20Model%20Evaluations.ipynb.)
+2. [Feature Engineering](./2.%20Feature%20Engineering.ipynb.)
+3. [Modelling Routines](./3.%20Modelling%20Routines.ipynb.)
+4. [Trading Strategy](./4.%20Trading%20Strategy.ipynb.)
+5. [Model Evaluations](./4.%20Model%20Evaluations.ipynb.)
 
 The first 3 notebooks were used as a workspace to develop necessary modules to run Model Evaluations. Therefore, the modelling results and evaluations are fully contained in Model Evaluations.
 

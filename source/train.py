@@ -44,6 +44,7 @@ if __name__ == '__main__':
     ## TODO: Add any additional arguments that you will need to pass into your model
     parser.add_argument('--hidden_layers', type=int, default=10)
     parser.add_argument('--max_iter', type=int, default=300)
+    parser.add_argument('--random_state', type=int, default=100)
 #     parser.add_argument('--max_depth', type=int, default=5)
     
     # args holds all passed-in arguments
@@ -57,25 +58,19 @@ if __name__ == '__main__':
     train_y = train_data.iloc[:,0]
     train_x = train_data.iloc[:,1:]
     
-    
-    ## --- Your code here --- ##
-    
     hidden_layers = tuple([args.hidden_layers])
     ## TODO: Define a model 
     model = MLPRegressor(hidden_layer_sizes=hidden_layers,
-                            max_iter=args.max_iter,
-                            activation = 'relu',
-                            solver='lbfgs',
-                            early_stopping=True)
-#     model = DecisionTreeClassifier(max_depth=args.max_depth)
+                         max_iter=args.max_iter,
+                         activation = 'relu',
+                         solver='lbfgs',
+                         early_stopping=True,
+                         random_state=args.random_state)
+    
     
     
     ## TODO: Train the model
     model.fit(train_x, train_y)
-    
-    
-    ## --- End of your code  --- ##
-    
 
     # Save the trained model
     joblib.dump(model, os.path.join(args.model_dir, "model.joblib"))

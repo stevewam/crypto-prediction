@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 
+def RMSE(df, target):
+    return np.sqrt(sum((df[target] - df['pred']) ** 2)/len(result[target]))
+
 def update_mean(mean, t, new_value):
     if t == 0:
         return new_value
@@ -20,7 +23,7 @@ def evaluate(result, target, n=10, initial_value=10000):
     mean_roi = 0
     std_roi = 0
 
-    dates = list(set(result.time))
+    dates = list(set(result.index))
     dates.sort()
     
     history = {}

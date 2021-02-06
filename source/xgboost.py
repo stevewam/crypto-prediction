@@ -13,6 +13,7 @@ from sagemaker.amazon.amazon_estimator import get_image_uri
 from sagemaker.predictor import csv_serializer
 from sagemaker.estimator import Estimator
 from sagemaker.sklearn.estimator import SKLearn
+from sagemaker.tuner import HyperparameterTuner
 
 from source.load import DATA_DIR
 from source import create
@@ -67,6 +68,46 @@ class xgboost:
         estimator.fit({'train': train_input, 'validation': val_input})
         
         self.model = estimator
+        
+    def tuned_fit(self, hyperparameter_ranges):
+        
+        pd.concat([self.sets['train']['Y'], self.sets['train']['X']], axis=1) \
+                        .to_csv(self.train_loc, header=False, index=False)
+        pd.concat([self.sets['val']['Y'], self.sets['val']['X']], axis=1) \
+                        .to_csv(self.val_loc, header=False, index=False)
+
+        train_location = self.session.upload_data(self.train_loc, key_prefix=self.prefix)
+        val_location = self.session.upload_data(self.val_loc, key_prefix=self.prefix)
+
+        train_input = sagemaker.s3_input(s3_data=train_location, content_type='text/csv')
+        val_input = sagemaker.s3_input(s3_data=val_location, content_type='text/csv')
+        
+        container = get_image_uri(self.session.boto_region_name, 'xgboost')
+
+        xgb = Estimator(container,
+                        self.role, 
+                        train_instance_count=1,
+                        train_instance_type='ml.m4.xlarge',
+                        output_path='s3://{}/{}/output'.format(self.bucket, self.prefix),
+                        sagemaker_session=self.session)
+        
+        xgb.set_hyperparameters(**self.hyperparams)
+
+        tuner = HyperparameterTuner(estimator = xgb, 
+                                    objective_metric_name = 'validation:rmse',
+                                    objective_type = 'Minimize', 
+                                    max_jobs = 20, 
+                                    max_parallel_jobs = 4, 
+                                    hyperparameter_ranges = hyperparameter_ranges)
+
+        tuner.fit({'train': train_input, 'validation': val_input})
+        tuner.wait()
+        
+        estimator = Estimator.attach(tuner.best_training_job())
+        
+        self.model = estimator
+        
+        return tuner
     
     
     def init_predictor(self):

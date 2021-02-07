@@ -1,3 +1,8 @@
+"""Neural Net Routine Script
+
+This script is run the routines of training NeuralNet model and get predictions from the model.
+"""
+
 import numpy as np
 import pandas as pd
 import boto3
@@ -20,6 +25,8 @@ from source import create
 class neuralnet:
     
     def __init__(self, prefix, data, W, target, hyperparams):
+        """Initiate the necessary values to run the training job
+        """
         self.session = sagemaker.Session()
         self.role = get_execution_role()
         self.bucket = self.session.default_bucket()
@@ -38,10 +45,15 @@ class neuralnet:
     
     
     def __del__(self):
+        """Ensure endpoints are deleted if object is deconstructed.
+        """
         self.cleanup()
         
         
     def fit(self):
+        """Saves the training and validation set in S3 and set S3_input for training, then 
+        train the model based on the given hyperparameters
+        """
         pd.concat([self.sets['train']['Y'], self.sets['train']['X']], axis=1) \
                     .to_csv(self.train_loc, header=False, index=False)
         pd.concat([self.sets['val']['Y'], self.sets['val']['X']], axis=1) \
@@ -67,6 +79,8 @@ class neuralnet:
     
     
     def init_predictor(self):
+        """Create endpoints based on the trained model
+        """
         self.predictor = self.model.deploy(initial_instance_count=1, instance_type='ml.m4.xlarge')
         self.predictor.content_type = 'text/csv'
         self.predictor.serializer = csv_serializer
@@ -75,6 +89,10 @@ class neuralnet:
 
     
     def predict(self, predict_set, unscaled=True, batch_size=250):
+        """Predict results from a given set. Predicted results can either be scaled or unscaled. 
+        When unscaled, the prediction results will be reversed normalied (multiplied by standard
+        deviation and then added by its mean)
+        """
         X_val = self.sets[predict_set]['X'].values
         
         n_batch = int(round(len(X_val)/batch_size, -1))
@@ -98,6 +116,8 @@ class neuralnet:
     
     
     def cleanup(self):
+        """Delete endpoints and created CSV file
+        """
         self.predictor.delete_endpoint()
         os.remove(self.train_loc)
         os.remove(self.val_loc)

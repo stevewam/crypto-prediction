@@ -1,3 +1,8 @@
+"""DeepAR Routine Script
+
+This script is run the routines of training DeepAR model and get predictions from the model.
+"""
+
 import numpy as np
 import pandas as pd
 import boto3
@@ -14,12 +19,14 @@ from sagemaker.predictor import csv_serializer
 from sagemaker.estimator import Estimator
 from sagemaker.sklearn.estimator import SKLearn
 
-from source.load import DATA_DIR
+from source.load import *
 from source import create
 
 class deepar:
     
     def __init__(self, prefix, data, W, target, hyperparams):
+        """Initiate the necessary values to run the training job
+        """
         self.session = sagemaker.Session()
         self.role = get_execution_role()
         self.bucket = self.session.default_bucket()
@@ -41,10 +48,14 @@ class deepar:
     
     
     def __del__(self):
+        """Ensure endpoints are deleted if object is deconstructed.
+        """
         self.cleanup()
 
 
     def write_json_dataset(self, features_df, filename): 
+        """Create JSON file based on training features
+        """
         symbols = features_df['sym'].unique()
         with open(filename, 'wb') as f:
 
@@ -67,6 +78,9 @@ class deepar:
         
         
     def fit(self):
+        """Saves the training and validation set in S3 and set S3_input for training, then 
+        train the model based on the given hyperparameters
+        """
         self.write_json_dataset(self.sets['trainval']['scaled'], self.trainval_loc)
 
         trainval_location = self.session.upload_data(self.trainval_loc, key_prefix=self.prefix)
@@ -89,29 +103,36 @@ class deepar:
     
     
     def init_predictor(self):
+        """Create endpoints based on the trained model
+        """
         self.predictor = self.model.deploy(initial_instance_count=1, instance_type='ml.m4.xlarge')
         
         return self.predictor
     
     
     def json_predictor_input(self, features_df, date, num_samples=50):
+        """Create input features for prediction
+        """
         instances = []
-        symbols = features_df['sym'].unique()
+        symbols = list(self.mapping.keys())
         look_back_date = date - pd.Timedelta(self.context_length, 'D')
         window = features_df.query("time >= @look_back_date & time <= @date")
+        order = []
 
-        for sym in symbols:
-            idx = self.mapping[sym]
-            sym_window = window.query("sym == @sym")
+        for symbol in symbols:
+            idx = self.mapping[symbol]
+            sym_window = window.query("sym == @symbol")
 
             if sym_window.empty:
-                continue
-
-            json_obj = {"start": str(list(sym_window['time'])[0]), 
-                        "target": list(sym_window[self.target])[:-1],
-                        "cat":[idx], 
-                        "dynamic_feat":[list(sym_window[column]) for column in self.features]}
-            instances.append(json_obj)
+                pass
+            else:
+                json_obj = {"start": str(list(sym_window['time'])[0]), 
+                            "target": list(sym_window[self.target])[:-1],
+                            "cat":[idx], 
+                            "dynamic_feat":[list(sym_window[column]) for column in self.features]}
+                instances.append(json_obj)
+                
+                order.append(symbol)
 
         configuration = {"num_samples": num_samples, 
                          "output_types": ["mean"]}
@@ -121,7 +142,7 @@ class deepar:
 
         json_request = json.dumps(request_data).encode('utf-8')
 
-        return json_request
+        return json_request, order
 
     
     def decode_prediction(self, prediction, encoding='utf-8'):
@@ -137,14 +158,18 @@ class deepar:
 
     
     def loop_predict(self, features_df, start, end):
+        """Loop over the given period between start to end to predict the value for each time step
+        based on the input features. This function creates the feature for each time step and then feed
+        it to the predictor to get the prediction value.
+        """
         dates = list(set(features_df[(features_df.time >= start) & (features_df.time <= end)]['time']))
 
         df = pd.DataFrame([])
         for date in dates:
-            test_features = self.json_predictor_input(features_df, date)
+            test_features, order = self.json_predictor_input(features_df, date)
             json_prediction = self.predictor.predict(test_features)
             pred = [float(x.values.squeeze()) for x in self.decode_prediction(json_prediction)]
-            temp_df = pd.DataFrame(zip([sym for sym in features_df['sym'].unique()], pred), 
+            temp_df = pd.DataFrame(zip(order, pred), 
                                    columns=['sym', 'pred'])
             temp_df['time'] = date
 
@@ -154,6 +179,10 @@ class deepar:
 
     
     def predict(self, predict_set, unscaled=True, recalculate=True):
+        """Predict results from a given set. Predicted results can either be scaled or unscaled. 
+        When unscaled, the prediction results will be reversed normalied (multiplied by standard
+        deviation and then added by its mean)
+        """
         trainval = self.sets['trainval']['scaled']
         test = self.sets['test']['scaled']
         X_val = pd.concat([trainval, test], axis=0)
@@ -189,6 +218,8 @@ class deepar:
     
     
     def cleanup(self):
+        """Delete endpoints and created CSV file
+        """
         self.predictor.delete_endpoint()
         os.remove(self.trainval_loc)
     

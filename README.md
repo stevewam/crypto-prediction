@@ -15,14 +15,13 @@ Additionally, the following blogpost was also referred to enhance the performanc
 There are no additional data to be downloaded or any packages to install.
 
 To go through the entire development process, you can follow the sequence below:
-1. [Data Loading](./1.%20Data%20Loading.ipynb.)
-2. [Feature Engineering](./2.%20Feature%20Engineering.ipynb.)
-3. [Modelling Routines](./3.%20Modelling%20Routines.ipynb.)
-4. [Trading Strategy](./4.%20Trading%20Strategy.ipynb.)
-5. [Model Evaluations](./4.%20Model%20Evaluations.ipynb.)
+1. [Data Loading](./1.%20Data%20Loading.ipynb)
+2. [Feature Engineering](./2.%20Feature%20Engineering.ipynb)
+3. [Modelling Routines](./3.%20Modelling%20Routines.ipynb)
+4. [Trading Strategy](./4.%20Trading%20Strategy.ipynb)
+5. [Model Evaluations](./4.%20Model%20Evaluations.ipynb)
 
-The first 3 notebooks were used as a workspace to develop necessary modules to run Model Evaluations. Therefore, the modelling results and evaluations are fully contained in Model Evaluations.
-
+The first 4 notebooks were used as workspaces to develop necessary modules to run fit different models and evaluate them. Model training and evaluations themselves are fully contained within the Model Evaluations notebook. 
 
 <br>
 <h2> Important Note </h2>
@@ -31,4 +30,4 @@ Initially, the features used for this cryptocurrency forecasting model include t
 
 The initial features of mean, median, standard deviation, trend and last value were replaced with lag features. Lag features are essentially values from previous data points that are used as features to predict the price for the given time period. 
 
-Note that notebooks listed above only includes development works after the change of features. To check for the models before this change of features, you can explore [(Deprecated) Model Training](./(Deprecated)%20Model%20Training.ipynb.) which showcases all the models' performance before the change of features.
+Note that notebooks listed above only includes development works after the change of features. To check for the models before this change of features, you can explore [Preliminary Results](./0.%20Preliminary%20Results.ipynb) which showcases all the models' performance before the change of features.

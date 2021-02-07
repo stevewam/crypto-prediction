@@ -1,3 +1,8 @@
+"""XGBoost Custom Script
+
+This script is train the custom XGBoost model with MAPE evaluation function
+"""
+
 from __future__ import print_function
 
 import argparse
@@ -39,7 +44,6 @@ def mape(predt, dtrain):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    # Hyperparameters are described here.
     parser.add_argument('--max_depth', type=int,)
     parser.add_argument('--eta', type=float)
     parser.add_argument('--gamma', type=int)
@@ -50,7 +54,6 @@ if __name__ == '__main__':
     parser.add_argument('--early_stopping_rounds', type=int)
     parser.add_argument('--disable', type=str)
 
-    # Sagemaker specific arguments. Defaults are set in the environment variables.
     parser.add_argument('--output_data_dir', type=str, default=os.environ.get('SM_OUTPUT_DATA_DIR'))
     parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_MODEL_DIR'))
     parser.add_argument('--train', type=str, default=os.environ.get('SM_CHANNEL_TRAIN'))
@@ -60,7 +63,6 @@ if __name__ == '__main__':
 
     args, _ = parser.parse_known_args()
 
-    # Get SageMaker host information from runtime environment variables
     sm_hosts = json.loads(args.sm_hosts)
     sm_current_host = args.sm_current_host
 
@@ -88,10 +90,8 @@ if __name__ == '__main__':
         model_dir=args.model_dir)
 
     if len(sm_hosts) > 1:
-        # Wait until all hosts are able to find each other
         entry_point._wait_hostname_resolution()
 
-        # Execute training function after initializing rabit.
         distributed.rabit_run(
             exec_fun=_xgb_train,
             args=xgb_train_args,
@@ -101,7 +101,6 @@ if __name__ == '__main__':
             update_rabit_args=True
         )
     else:
-        # If single node training, call training method directly.
         if dtrain:
             xgb_train_args['is_master'] = True
             _xgb_train(**xgb_train_args)
